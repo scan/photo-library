@@ -1,18 +1,27 @@
 import { type FunctionComponent, useState } from 'react';
 import { open } from '@tauri-apps/api/dialog';
-import { appDataDir } from '@tauri-apps/api/path';
+import { pictureDir } from '@tauri-apps/api/path';
+import { invoke } from '@tauri-apps/api';
 
 const App: FunctionComponent = () => {
   const [filePath, setFilePath] = useState('');
 
   const handleOpenClick = async () => {
-    const path = await open({
-      directory: true,
+    const paths = await open({
+      directory: false,
       multiple: true,
-      defaultPath: await appDataDir(),
+      defaultPath: await pictureDir(),
+      filters: [
+        {
+          name: "Images",
+          extensions: ['jpg', 'png', 'arw', 'raf', 'dng'],
+        },
+      ],
     });
 
-    setFilePath(Array.isArray(path) ? path.join(';') : path ?? '');
+    const metadata = await invoke("get_image_metadata", { paths: Array.isArray(paths) ? paths : [paths ?? ''] });
+
+    setFilePath(JSON.stringify(metadata));
   };
 
   return (

@@ -51,7 +51,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "net.redpandacoding.photo-library",
       "targets": "all"
     },
     "security": {
@@ -64,7 +64,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "photo-library",
+        "title": "Photo Library",
         "width": 800,
         "height": 600
       }

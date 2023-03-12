@@ -1,11 +1,13 @@
 #[derive(Debug, thiserror::Error)]
 pub enum RepositoryError {
   #[error(transparent)]
-  SqlError(#[from] sqlx::Error),
+  Database(#[from] sqlx::Error),
   #[error(transparent)]
-  MigrateError(#[from] sqlx::migrate::MigrateError),
+  Migration(#[from] sqlx::migrate::MigrateError),
   #[error(transparent)]
   Io(#[from] std::io::Error),
+  #[error(transparent)]
+  Other(#[from] anyhow::Error)
 }
 
 impl serde::Serialize for RepositoryError {

@@ -7,21 +7,26 @@ const App: FunctionComponent = () => {
   const [filePath, setFilePath] = useState('');
 
   const handleOpenClick = async () => {
-    const paths = await open({
-      directory: false,
-      multiple: true,
+    let path = await open({
+      directory: true,
+      multiple: false,
       defaultPath: await pictureDir(),
-      filters: [
-        {
-          name: "Images",
-          extensions: ['jpg', 'png', 'arw', 'raf', 'dng'],
-        },
-      ],
     });
 
-    const metadata = await invoke("get_image_metadata", { paths: Array.isArray(paths) ? paths : [paths ?? ''] });
+    if (Array.isArray(path)) {
+      path = path[0];
+    }
 
-    setFilePath(JSON.stringify(metadata));
+    try {
+      const metadata = await invoke('add_to_library', {
+        rootPath: path,
+        recursive: false,
+      });
+
+      setFilePath(JSON.stringify(metadata));
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (

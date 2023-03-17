@@ -1,9 +1,7 @@
 #[derive(Debug, thiserror::Error)]
 pub enum RepositoryError {
   #[error(transparent)]
-  Database(#[from] sqlx::Error),
-  #[error(transparent)]
-  Migration(#[from] sqlx::migrate::MigrateError),
+  Database(#[from] sea_orm::DbErr),
   #[error(transparent)]
   Io(#[from] std::io::Error),
   #[error(transparent)]

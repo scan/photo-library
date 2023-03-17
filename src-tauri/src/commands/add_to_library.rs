@@ -1,9 +1,9 @@
 use globwalk::glob;
 use num::ToPrimitive;
 use std::{
-  fs,
   path::{Path, PathBuf},
 };
+use tokio::fs;
 
 use crate::repository::{Photo, RepositoryError};
 
@@ -22,7 +22,7 @@ struct ImageMetadata {
 
 async fn get_image_metadata(path: &str) -> anyhow::Result<ImageMetadata> {
   let meta = rexiv2::Metadata::new_from_path(path)?;
-  let file_data = fs::metadata(path)?;
+  let file_data = fs::metadata(path).await?;
 
   // println!("{:?}", meta.get_tag_string("Exif.Image.DateTime"));
 

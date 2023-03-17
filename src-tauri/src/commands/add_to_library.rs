@@ -60,6 +60,7 @@ impl ImageMetadata {
       equivalent_focal_length: self.equivalent_focal_length.map(|n| n as f64),
       iso: self.iso.map(|n| n as u32),
       lens_model: self.lens_model.clone(),
+      exposure_time: self.exposure_time,
       preview_image: None,
     })
   }

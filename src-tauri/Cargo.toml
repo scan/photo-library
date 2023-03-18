@@ -15,6 +15,7 @@ tauri-build = { version = "1.2", features = [] }
 [dependencies]
 anyhow = "1.0.69"
 chrono = { version = "0.4.24", features = ["serde"] }
+enclose = "1.1.8"
 futures = "0.3.27"
 glob = "0.3.1"
 globwalk = "0.8.1"
@@ -22,6 +23,7 @@ num = "0.4.0"
 rexiv2 = "0.10.0"
 sea-orm = { version = "0.11.1", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls"] }
 sea-orm-migration = { version = "0.11.1", features = ["sqlx-sqlite", "runtime-tokio-rustls"] }
+sea-query = "0.28.3"
 serde = { version = "1.0.156", features = ["derive"] }
 serde_json = "1.0"
 tauri = { version = "1.2", features = ["dialog-open", "fs-read-dir", "fs-read-file", "path-all", "shell-open"] }

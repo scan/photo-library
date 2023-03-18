@@ -3,6 +3,8 @@ pub enum RepositoryError {
   #[error(transparent)]
   Database(#[from] sea_orm::DbErr),
   #[error(transparent)]
+  DatabaseTransaction(#[from] sea_orm::TransactionError<sea_orm::DbErr>),
+  #[error(transparent)]
   Io(#[from] std::io::Error),
   #[error(transparent)]
   Other(#[from] anyhow::Error)

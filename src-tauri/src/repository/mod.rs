@@ -1,16 +1,20 @@
+mod entities;
 mod error;
 mod migrator;
-mod model;
 
 use std::ops::Deref;
 use tokio::fs;
 
-use sea_orm::{Database, DatabaseConnection};
+use sea_orm::{prelude::*, ActiveValue};
+use sea_orm::{Database, DatabaseConnection, TransactionTrait, TryIntoModel};
 use sea_orm_migration::prelude::*;
 use tauri::{api::path::app_local_data_dir, Config};
+use uuid::Uuid;
 
+use crate::metadata::ImageMetadata;
+
+pub use self::entities::{prelude::*, *};
 pub use self::error::RepositoryError;
-pub use self::model::Photo;
 
 use self::migrator::Migrator;
 
@@ -26,8 +30,50 @@ impl Deref for Repository {
 }
 
 impl Repository {
-  pub async fn insert_photo(&self, photo: &Photo) -> Result<(), RepositoryError> {
-    Ok(())
+  pub async fn insert_or_update_photo(&self, meta: ImageMetadata) -> Result<Uuid, RepositoryError> {
+    let id = self
+      .0
+      .transaction::<_, Uuid, DbErr>(|txn| {
+        Box::pin(async move {
+          let full_path: String = meta.full_path.to_string_lossy().into();
+
+          let existing = photo::Entity::find()
+            .filter(photo::Column::FullPath.eq(&full_path))
+            .one(txn)
+            .await?;
+          let photo_model = existing
+            .map(photo::ActiveModel::from)
+            .unwrap_or(photo::ActiveModel {
+              id: ActiveValue::Set(Uuid::new_v4()),
+              full_path: ActiveValue::Set(full_path.to_ascii_lowercase()),
+              file_name: ActiveValue::Set(String::from(
+                meta
+                  .full_path
+                  .file_name()
+                  .unwrap_or_default()
+                  .to_string_lossy()
+                  .to_ascii_lowercase(),
+              )),
+              file_extension: ActiveValue::Set(
+                meta
+                  .full_path
+                  .extension()
+                  .unwrap_or_default()
+                  .to_string_lossy()
+                  .to_ascii_lowercase(),
+              ),
+              ..Default::default()
+            });
+
+          let photo_model = photo_model.save(txn).await?;
+          let photo_model = photo_model.try_into_model()?;
+
+          Ok(photo_model.id)
+        })
+      })
+      .await?;
+
+    Ok(id)
   }
 }
 

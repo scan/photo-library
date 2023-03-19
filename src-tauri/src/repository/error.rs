@@ -1,3 +1,5 @@
+use serde::Serialize;
+
 #[derive(Debug, thiserror::Error)]
 pub enum RepositoryError {
   #[error(transparent)]
@@ -10,7 +12,7 @@ pub enum RepositoryError {
   Other(#[from] anyhow::Error)
 }
 
-impl serde::Serialize for RepositoryError {
+impl Serialize for RepositoryError {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
     S: serde::ser::Serializer,

@@ -5,7 +5,7 @@ mod migrator;
 use std::ops::Deref;
 use tokio::fs;
 
-use sea_orm::{prelude::*, ActiveValue};
+use sea_orm::{prelude::*, ActiveValue, IntoActiveModel};
 use sea_orm::{Database, DatabaseConnection, TransactionTrait, TryIntoModel};
 use sea_orm_migration::prelude::*;
 use tauri::{api::path::app_local_data_dir, Config};
@@ -35,40 +35,70 @@ impl Repository {
       .0
       .transaction::<_, Uuid, DbErr>(|txn| {
         Box::pin(async move {
+          use ActiveValue::Set;
+
           let full_path: String = meta.full_path.to_string_lossy().into();
 
           let existing = photo::Entity::find()
             .filter(photo::Column::FullPath.eq(&full_path))
             .one(txn)
             .await?;
-          let photo_model = existing
-            .map(photo::ActiveModel::from)
-            .unwrap_or(photo::ActiveModel {
-              id: ActiveValue::Set(Uuid::new_v4()),
-              full_path: ActiveValue::Set(full_path.to_ascii_lowercase()),
-              file_name: ActiveValue::Set(String::from(
-                meta
-                  .full_path
-                  .file_name()
-                  .unwrap_or_default()
-                  .to_string_lossy()
-                  .to_ascii_lowercase(),
-              )),
-              file_extension: ActiveValue::Set(
-                meta
-                  .full_path
-                  .extension()
-                  .unwrap_or_default()
-                  .to_string_lossy()
-                  .to_ascii_lowercase(),
-              ),
-              ..Default::default()
-            });
 
-          let photo_model = photo_model.save(txn).await?;
-          let photo_model = photo_model.try_into_model()?;
+          match existing {
+            Some(p) => {
+              let id = p.id;
+              let mut photo_model = p.into_active_model();
 
-          Ok(photo_model.id)
+              photo_model.shot_at = Set(meta.shot_at);
+              photo_model.camera_name = Set(meta.camera_name);
+              photo_model.aperture = Set(meta.aperture);
+              photo_model.focal_length = Set(meta.focal_length);
+              photo_model.equvalent_focal_length =
+                Set(meta.equivalent_focal_length.map(|n| n as f64));
+              photo_model.iso = Set(meta.iso);
+              photo_model.lens_model = Set(meta.lens_model);
+              photo_model.exposure_time = Set(meta.exposure_time);
+
+              photo_model.save(txn).await?;
+              Ok(id)
+            }
+            None => {
+              let id = Uuid::new_v4();
+
+              let photo_model = photo::ActiveModel {
+                id: Set(id),
+                full_path: Set(full_path),
+                file_name: Set(String::from(
+                  meta
+                    .full_path
+                    .file_name()
+                    .unwrap_or_default()
+                    .to_string_lossy(),
+                )),
+                file_extension: Set(
+                  meta
+                    .full_path
+                    .extension()
+                    .unwrap_or_default()
+                    .to_string_lossy()
+                    .to_ascii_lowercase(),
+                ),
+                shot_at: Set(meta.shot_at),
+                camera_name: Set(meta.camera_name),
+                aperture: Set(meta.aperture),
+                focal_length: Set(meta.focal_length),
+                equvalent_focal_length: Set(meta.equivalent_focal_length.map(|n| n as f64)),
+                iso: Set(meta.iso),
+                lens_model: Set(meta.lens_model),
+                exposure_time: Set(meta.exposure_time),
+                ..Default::default()
+              };
+
+              photo_model.insert(txn).await?;
+
+              Ok(id)
+            }
+          }
         })
       })
       .await?;

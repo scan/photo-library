@@ -20,7 +20,7 @@ const App: FunctionComponent = () => {
     try {
       const metadata = await invoke('add_to_library', {
         rootPath: path,
-        recursive: false,
+        recursive: true,
       });
 
       setFilePath(JSON.stringify(metadata));

@@ -64,7 +64,7 @@ pub async fn add_to_library(state: tauri::State<'_, AppState>, root_path: String
     .for_each(|res| async {
       match res {
         Ok(id) => println!("added file id {}", id),
-        Err(e) => eprintln!("failed to add file: {:?}", e),
+        Err(e) => eprintln!("failed to add file: {}", e),
       }
     })
     .await;

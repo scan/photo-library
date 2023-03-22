@@ -6,7 +6,7 @@ use std::ops::Deref;
 use tokio::fs;
 
 use sea_orm::{prelude::*, ActiveValue, IntoActiveModel};
-use sea_orm::{Database, DatabaseConnection, TransactionTrait, TryIntoModel};
+use sea_orm::{Database, DatabaseConnection, TransactionTrait};
 use sea_orm_migration::prelude::*;
 use tauri::{api::path::app_local_data_dir, Config};
 use uuid::Uuid;

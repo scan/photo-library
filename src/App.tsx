@@ -2,9 +2,12 @@ import { type FunctionComponent, useState } from 'react';
 import { open } from '@tauri-apps/api/dialog';
 import { pictureDir } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api';
+import { useMutation } from '@tanstack/react-query';
+
+import { initiateLibraryAdd } from './api';
 
 const App: FunctionComponent = () => {
-  const [filePath, setFilePath] = useState('');
+  const startAddingMutation = useMutation(initiateLibraryAdd);
 
   const handleOpenClick = async () => {
     let path = await open({
@@ -17,16 +20,11 @@ const App: FunctionComponent = () => {
       path = path[0];
     }
 
-    try {
-      const metadata = await invoke('add_to_library', {
-        rootPath: path,
-        recursive: true,
-      });
-
-      setFilePath(JSON.stringify(metadata));
-    } catch (e) {
-      console.error(e);
+    if (!path) {
+      return;
     }
+
+    startAddingMutation.mutate({ rootPath: path, recursive: false });
   };
 
   return (
@@ -37,12 +35,12 @@ const App: FunctionComponent = () => {
         <button
           className="btn btn-primary btn-lg"
           type="button"
+          disabled={startAddingMutation.isLoading}
           onClick={handleOpenClick}
         >
           Open
         </button>
       </div>
-      <p>{filePath}</p>
     </div>
   );
 };
